@@ -83,8 +83,6 @@ public class MainActivity extends AppCompatActivity {
         } while (CR.moveToNext());
 
         //Retrieve online friends
-
-
         tempList = new ArrayList();
         tempList.add(mySelf);
 

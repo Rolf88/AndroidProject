@@ -123,11 +123,11 @@ public class Registration extends AppCompatActivity {
     }
 
     private void sendToDB() {
-        Firebase putRef = firebaseRef.child(mySelf1.getName().toString());
+        Firebase putRef = firebaseRef.child(mySelf1.getName());
         Map<String, Object> map = new HashMap();
-        map.put("name", mySelf1.getName().toString());
-        map.put("email", mySelf1.getEmail().toString());
-        map.put("password", mySelf1.getPassword().toString());
+        map.put("name", mySelf1.getName());
+        map.put("email", mySelf1.getEmail());
+        map.put("password", mySelf1.getPassword());
         map.put("latitude", new Double(mySelf1.getLatitude()).toString());
         map.put("longitude", new Double(mySelf1.getLongitude()).toString());
         putRef.setValue(map);

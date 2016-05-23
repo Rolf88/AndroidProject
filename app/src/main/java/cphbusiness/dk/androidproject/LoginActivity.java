@@ -55,7 +55,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * A dummy authentication store containing known user names and passwords.
      * TODO: remove after connecting to a real authentication system.
      */
-    private static List<String> DUMMY_CREDENTIALS;
+    private static List<User> DUMMY_CREDENTIALS;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -83,40 +83,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         firebaseRef = new Firebase(FIREBASE_URL);
 
         users = new ArrayList();
-
-        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    String namePath = postSnapshot.getKey() + "/name";
-                    String emailPath = postSnapshot.getKey() + "/email";
-                    String passwordPath = postSnapshot.getKey() + "/password";
-                    String latitudePath = postSnapshot.getKey() + "/latitude";
-                    String longitudePath = postSnapshot.getKey() + "/longitude";
-
-                    String tempName = dataSnapshot.child(namePath).getValue().toString();
-                    String tempEmail = dataSnapshot.child(emailPath).getValue().toString();
-                    String tempPassword = dataSnapshot.child(passwordPath).getValue().toString();
-                    double tempLatitude = Double.parseDouble(dataSnapshot.child(latitudePath).getValue().toString());
-                    double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
-
-                    User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
-                    users.add(tempUser);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Toast.makeText(LoginActivity.this, firebaseError.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        DUMMY_CREDENTIALS = new ArrayList();
-
-        for (User user1 : users){
-            DUMMY_CREDENTIALS.add(user1.getEmail()+":"+user1.getPassword());
-        }
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -346,7 +312,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         int ADDRESS = 0;
         int IS_PRIMARY = 1;
     }
-
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -366,17 +331,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // TODO: attempt authentication against a network service.
 
             try {
-                // Simulate network access.
+                //getUsers();
                 Thread.sleep(2000);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                System.out.println(e);
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
+            for (User credential : DUMMY_CREDENTIALS) {
+                String mail = credential.getEmail();
+                String pass = credential.getPassword();
+                if (mail.equals(mEmail)) {
                     // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
+                    return pass.equals(mPassword);
                 }
             }
 
@@ -389,8 +356,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
 
-            for(User user2 : users){
-                if(user2.getEmail() == mEmailView.getText().toString()){
+            for (User user2 : users) {
+                if (user2.getEmail() == mEmailView.getText().toString()) {
                     mySelf = user2;
                 }
             }
@@ -412,5 +379,43 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
         }
     }
+
+    private void getUsers(){
+        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    String namePath = postSnapshot.getKey() + "/name";
+                    String emailPath = postSnapshot.getKey() + "/email";
+                    String passwordPath = postSnapshot.getKey() + "/password";
+                    String latitudePath = postSnapshot.getKey() + "/latitude";
+                    String longitudePath = postSnapshot.getKey() + "/longitude";
+
+                    String tempName = dataSnapshot.child(namePath).getValue().toString();
+                    String tempEmail = dataSnapshot.child(emailPath).getValue().toString();
+                    String tempPassword = dataSnapshot.child(passwordPath).getValue().toString();
+                    double tempLatitude = Double.parseDouble(dataSnapshot.child(latitudePath).getValue().toString());
+                    double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
+
+                    User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
+                    Toast.makeText(LoginActivity.this, tempUser.getEmail() + "/" + tempUser.getPassword(), Toast.LENGTH_SHORT).show();
+                    users.add(tempUser);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                Toast.makeText(LoginActivity.this, firebaseError.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        DUMMY_CREDENTIALS = new ArrayList();
+
+        for (User user1 : users) {
+            DUMMY_CREDENTIALS.add(user1);
+        }
+    }
+
 }
 
