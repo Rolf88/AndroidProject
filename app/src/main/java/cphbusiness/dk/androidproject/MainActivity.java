@@ -32,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
     private Firebase firebaseRef;
     private static final String FIREBASE_URL = "https://torrid-inferno-4868.firebaseio.com";
     private ListView listView;
-    private List<User> userList;
     private List<User> tempfriendList;
     private LocationManager locationManager;
     private Criteria criteria;
@@ -51,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         listView = (ListView) findViewById(R.id.listView);
-        userList = new ArrayList();
         tempfriendList = new ArrayList();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         criteria = new Criteria();
@@ -76,9 +74,26 @@ public class MainActivity extends AppCompatActivity {
         mySelf.setLatitude(myLatitude);
         mySelf.setLongitude(myLongitude);
 
-        //Remember to add mySelf to the firebasedb with the new locations
         sendToFireDB();
 
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i = new Intent(MainActivity.this, MapsActivity.class);
+
+                i.putExtra("latitude", tempfriendList.get((int) id).getLatitude());
+                i.putExtra("longitude", tempfriendList.get((int) id).getLongitude());
+                i.putExtra("name", tempfriendList.get((int) id).getName());
+                startActivity(i);
+
+            }
+        });
+
+
+    }
+
+    public void fetchFriends() {
+        tempfriendList.clear();
         Cursor CR = db.getInformations(db);
         if (CR.moveToFirst()) {
             do {
@@ -97,52 +112,14 @@ public class MainActivity extends AppCompatActivity {
 
         listView.setAdapter(new ArrayAdapter<User>(this, android.R.layout.simple_list_item_1, tempfriendList));
         listView.setTextFilterEnabled(true);
-
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent i = new Intent(MainActivity.this, MapsActivity.class);
-
-                i.putExtra("latitude", tempfriendList.get((int) id).getLatitude());
-                i.putExtra("longitude", tempfriendList.get((int) id).getLongitude());
-                i.putExtra("name", tempfriendList.get((int) id).getName());
-                startActivity(i);
-
-            }
-        });
-
-
     }
 
-    /*private String getIpAddress() {
-        String ip = "";
-        try {
-            Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface.getNetworkInterfaces();
-            while (enumNetworkInterfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = enumNetworkInterfaces
-                        .nextElement();
-                Enumeration<InetAddress> enumInetAddress = networkInterface
-                        .getInetAddresses();
-                while (enumInetAddress.hasMoreElements()) {
-                    InetAddress inetAddress = enumInetAddress.nextElement();
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchFriends();
 
-                    if (inetAddress.isSiteLocalAddress()) {
-                        ip += inetAddress.getHostAddress();
-                    }
-
-                }
-
-            }
-
-        } catch (SocketException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            ip += "Something Wrong! " + e.toString() + "\n";
-        }
-
-        return ip;
-    }*/
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
