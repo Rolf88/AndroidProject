@@ -11,7 +11,6 @@ public class TableData {
         public static final String ID = "id";
         public static final String NAME = "name";
         public static final String EMAIL = "email";
-        public static final String PASS_WORD = "password";
         public static final String lATITUDE = "latitude";
         public static final String lONGITUDE = "longitude";
 

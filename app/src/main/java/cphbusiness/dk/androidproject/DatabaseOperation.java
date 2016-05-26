@@ -17,7 +17,6 @@ public class DatabaseOperation extends SQLiteOpenHelper {
             + TableData.MainTable.ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + TableData.MainTable.NAME + " TEXT,"
             + TableData.MainTable.EMAIL + " TEXT,"
-            + TableData.MainTable.PASS_WORD + " TEXT,"
             + TableData.MainTable.lATITUDE + " REAL,"
             + TableData.MainTable.lONGITUDE + " REAL );";
 
@@ -42,7 +41,6 @@ public class DatabaseOperation extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put(TableData.MainTable.NAME, user.getName());
         cv.put(TableData.MainTable.EMAIL, user.getEmail());
-        cv.put(TableData.MainTable.PASS_WORD, user.getPassword());
         cv.put(TableData.MainTable.lATITUDE, user.getLatitude());
         cv.put(TableData.MainTable.lONGITUDE, user.getLongitude());
         long k = SQ.insert(TableData.MainTable.TABLE_NAME_USER, null, cv);
@@ -53,7 +51,7 @@ public class DatabaseOperation extends SQLiteOpenHelper {
 
     public Cursor getInformations(DatabaseOperation dob) {
         SQLiteDatabase SQ = dob.getReadableDatabase();
-        String[] columns = {TableData.MainTable.ID, TableData.MainTable.NAME, TableData.MainTable.PASS_WORD, TableData.MainTable.lATITUDE, TableData.MainTable.lONGITUDE};
+        String[] columns = {TableData.MainTable.ID, TableData.MainTable.NAME, TableData.MainTable.EMAIL, TableData.MainTable.lATITUDE, TableData.MainTable.lONGITUDE};
         Cursor CR = SQ.query(TableData.MainTable.TABLE_NAME_USER, columns, null, null, null, null, null);
         Log.d("Database Operations", "Info retrieved");
         return CR;
@@ -66,14 +64,13 @@ public class DatabaseOperation extends SQLiteOpenHelper {
         Log.d("Database Operations", "All info deleted");
     }
 
-    public void updateInformation(DatabaseOperation dob, String friendName, User user) {
+    public void updateInformation(DatabaseOperation dob, User user) {
         SQLiteDatabase SQ = dob.getWritableDatabase();
         String selection = TableData.MainTable.NAME + " LIKE ? ";
-        String args[] = {friendName};
+        String args[] = {user.getName()};
         ContentValues values = new ContentValues();
         values.put(TableData.MainTable.NAME, user.getName());
         values.put(TableData.MainTable.EMAIL, user.getEmail());
-        values.put(TableData.MainTable.PASS_WORD, user.getPassword());
         values.put(TableData.MainTable.lATITUDE , user.getLatitude());
         values.put(TableData.MainTable.lONGITUDE, user.getLongitude());
         SQ.update(TableData.MainTable.TABLE_NAME_USER, values, selection, args);

@@ -51,11 +51,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private static final int REQUEST_READ_CONTACTS = 0;
     private Button btnReg;
+
     /**
      * A dummy authentication store containing known user names and passwords.
      * TODO: remove after connecting to a real authentication system.
      */
-    private static List<User> DUMMY_CREDENTIALS;
+    private static List<User> credentials = new ArrayList();
+    private Firebase firebaseRef;
+    private static final String FIREBASE_URL = "https://torrid-inferno-4868.firebaseio.com";
+    public User mySelf;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -66,10 +70,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private Firebase firebaseRef;
-    private static final String FIREBASE_URL = "https://torrid-inferno-4868.firebaseio.com";
-    private List<User> users;
-    private User mySelf;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +81,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         Firebase.setAndroidContext(this);
         firebaseRef = new Firebase(FIREBASE_URL);
-
-        users = new ArrayList();
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -106,15 +104,48 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                if (credentials.isEmpty()) {
+                    getUsers();
+                }
                 attemptLogin();
             }
         });
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+    }
+
+    private void getUsers() {
+        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    String namePath = postSnapshot.getKey() + "/name";
+                    String emailPath = postSnapshot.getKey() + "/email";
+                    String passwordPath = postSnapshot.getKey() + "/password";
+                    String latitudePath = postSnapshot.getKey() + "/latitude";
+                    String longitudePath = postSnapshot.getKey() + "/longitude";
+
+                    String tempName = dataSnapshot.child(namePath).getValue().toString();
+                    String tempEmail = dataSnapshot.child(emailPath).getValue().toString();
+                    String tempPassword = dataSnapshot.child(passwordPath).getValue().toString();
+                    double tempLatitude = Double.parseDouble(dataSnapshot.child(latitudePath).getValue().toString());
+                    double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
+
+                    User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
+                    credentials.add(tempUser);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+            }
+        });
     }
 
     private void populateAutoComplete() {
@@ -220,7 +251,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() > 1;
     }
 
     /**
@@ -312,6 +343,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         int ADDRESS = 0;
         int IS_PRIMARY = 1;
     }
+
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -331,19 +363,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // TODO: attempt authentication against a network service.
 
             try {
-                //getUsers();
+                // Simulate network access.
                 Thread.sleep(2000);
-            } catch (Exception e) {
-                System.out.println(e);
+            } catch (InterruptedException e) {
                 return false;
             }
 
-            for (User credential : DUMMY_CREDENTIALS) {
+            for (User credential : credentials) {
                 String mail = credential.getEmail();
                 String pass = credential.getPassword();
                 if (mail.equals(mEmail)) {
                     // Account exists, return true if the password matches.
-                    return pass.equals(mPassword);
+                    boolean bool = pass.equals(mPassword);
+                    if (bool) {
+                        mySelf = credential;
+                    }
+                    return bool;
                 }
             }
 
@@ -355,20 +390,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         protected void onPostExecute(final Boolean success) {
             mAuthTask = null;
             showProgress(false);
-
-            for (User user2 : users) {
-                if (user2.getEmail() == mEmailView.getText().toString()) {
-                    mySelf = user2;
-                }
+            ArrayList<String> stringList = new ArrayList();
+            for (User tempUser : credentials) {
+                stringList.add(tempUser.getName());
             }
 
             if (success) {
                 finish();
                 Intent myI = new Intent(LoginActivity.this, MainActivity.class);
-                myI.putExtra("MySelf", mySelf);
+                myI.putStringArrayListExtra("userNames", stringList);
+                myI.putExtra("mySelf", mySelf);
                 LoginActivity.this.startActivity(myI);
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError("Email and password doesn't match");
                 mPasswordView.requestFocus();
             }
         }
@@ -379,43 +413,5 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
         }
     }
-
-    private void getUsers(){
-        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    String namePath = postSnapshot.getKey() + "/name";
-                    String emailPath = postSnapshot.getKey() + "/email";
-                    String passwordPath = postSnapshot.getKey() + "/password";
-                    String latitudePath = postSnapshot.getKey() + "/latitude";
-                    String longitudePath = postSnapshot.getKey() + "/longitude";
-
-                    String tempName = dataSnapshot.child(namePath).getValue().toString();
-                    String tempEmail = dataSnapshot.child(emailPath).getValue().toString();
-                    String tempPassword = dataSnapshot.child(passwordPath).getValue().toString();
-                    double tempLatitude = Double.parseDouble(dataSnapshot.child(latitudePath).getValue().toString());
-                    double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
-
-                    User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
-                    Toast.makeText(LoginActivity.this, tempUser.getEmail() + "/" + tempUser.getPassword(), Toast.LENGTH_SHORT).show();
-                    users.add(tempUser);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Toast.makeText(LoginActivity.this, firebaseError.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        DUMMY_CREDENTIALS = new ArrayList();
-
-        for (User user1 : users) {
-            DUMMY_CREDENTIALS.add(user1);
-        }
-    }
-
 }
 

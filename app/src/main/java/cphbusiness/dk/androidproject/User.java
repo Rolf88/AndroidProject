@@ -31,7 +31,7 @@ public class User implements Serializable {
         return name;
     }
 
-    public void setName(String name){
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -39,7 +39,7 @@ public class User implements Serializable {
         return email;
     }
 
-    public void setEmail(String email){
+    public void setEmail(String email) {
         this.email = email;
     }
 
@@ -63,8 +63,9 @@ public class User implements Serializable {
         this.longitude = longitude;
     }
 
+    @Override
     public String toString() {
-        return name;
+        return this.name;
     }
 }
 
