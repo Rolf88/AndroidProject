@@ -82,7 +82,7 @@ public class Registration extends AppCompatActivity {
 
                 }
                 if (!isUsed) {
-                    sendToDB();
+                    sendToFDB();
                     finish();
                 } else if (isUsed) {
                     editMail.setText(null);
@@ -113,7 +113,7 @@ public class Registration extends AppCompatActivity {
         }
     }
 
-    private void sendToDB() {
+    private void sendToFDB() {
         Firebase putRef = firebaseRef.child(mySelf1.getName().toString());
         Map<String, String> map = new HashMap();
         map.put("name", mySelf1.getName().toString());

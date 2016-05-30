@@ -17,4 +17,5 @@
     <string name="title_activity_registration">Registration</string>
     <string name="title_activity_find_friends">FindFriends</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_my_friends">MyFriends</string>
 </resources>

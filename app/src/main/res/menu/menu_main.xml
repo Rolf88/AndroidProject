@@ -7,4 +7,9 @@
         android:orderInCategory="100"
         android:title="Find friends"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/my_friends"
+        android:orderInCategory="100"
+        android:title="My Friends"
+        app:showAsAction="never"/>
 </menu>

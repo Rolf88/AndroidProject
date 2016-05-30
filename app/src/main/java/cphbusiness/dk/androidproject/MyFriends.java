@@ -3,15 +3,14 @@ package cphbusiness.dk.androidproject;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -23,72 +22,74 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AddFriends extends AppCompatActivity {
-
+public class MyFriends extends AppCompatActivity {
     private Firebase firebaseRef;
     private static final String FIREBASE_URL = "https://torrid-inferno-4868.firebaseio.com";
     private Firebase firebaseRequest;
     private static final String FRIENDREQ_URL = "https://friend-request-5555.firebaseio.com";
+    private Intent i;
+    private ArrayList<String> requestStringList;
+    private User mySelf;
     private ListView listView;
     private List<User> friendList;
     private DatabaseOperation db;
     private Context ctx;
-    private Intent i;
-    private User mySelf1;
-    private ArrayList<String> stringList;
     private ArrayAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_find_friends);
+        setContentView(R.layout.activity_my_friends);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         Firebase.setAndroidContext(this);
         firebaseRef = new Firebase(FIREBASE_URL);
         firebaseRequest = new Firebase(FRIENDREQ_URL);
-
+        i = getIntent();
+        requestStringList = i.getStringArrayListExtra("requests");
+        mySelf = (User) i.getSerializableExtra("mySelf");
+        listView = (ListView) findViewById(R.id.listViewMyF);
+        friendList = new ArrayList();
         ctx = this;
         db = new DatabaseOperation(ctx);
-        listView = (ListView) findViewById(R.id.listViewFf);
-        friendList = new ArrayList();
-        i = getIntent();
-        mySelf1 = (User) i.getSerializableExtra("mySelf");
-        stringList = i.getStringArrayListExtra("userNames");
+        adapter = new ArrayAdapter<String>(MyFriends.this, android.R.layout.simple_list_item_1, requestStringList);
 
         getUsers();
 
-        adapter = new ArrayAdapter<String>(AddFriends.this, android.R.layout.simple_list_item_1, stringList);
+
         listView.setAdapter(adapter);
         listView.setTextFilterEnabled(true);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                User tempUser = new User();
-                boolean gotTheUser = false;
                 for (User user : friendList) {
-                    if (user.getName().equals(stringList.get((int) id))) {
-                        tempUser = user;
-                        gotTheUser = true;
-                        break;
-                    } else {
-                        gotTheUser = false;
+                    if (user.getName().equals(requestStringList.get((int) id))) {
+                        FriendRequest request = new FriendRequest();
+                        request.setAccepted("true");
+                        request.setFriendAccepter(mySelf.getName());
+                        request.setFriendSeeker(user.getName());
+                        db.putInformation(db, user);
+                        sendRequestToDB(request);
+                        finish();
                     }
                 }
-
-                if (gotTheUser) {
-                    FriendRequest friendRequest = new FriendRequest();
-                    friendRequest.setFriendSeeker(mySelf1.getName());
-                    friendRequest.setFriendAccepter(tempUser.getName());
-                    friendRequest.setAccepted("false");
-                    sendRequestToDB(friendRequest);
-                }
-
-                finish();
             }
         });
+    }
+
+    private void sendRequestToDB(FriendRequest friendRequest) {
+        String myBoolean = friendRequest.getAccepted();
+        String seeker = friendRequest.getFriendSeeker();
+        String accepter = friendRequest.getFriendAccepter();
+
+        Firebase putRef = firebaseRequest.child(seeker+"+"+accepter);
+        Map<String, String> map = new HashMap();
+        map.put("seeker", seeker);
+        map.put("accepter", accepter);
+        map.put("boolean", myBoolean);
+        putRef.setValue(map);
     }
 
     private void getUsers() {
@@ -111,25 +112,11 @@ public class AddFriends extends AppCompatActivity {
                     User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
                     friendList.add(tempUser);
                 }
-
             }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
             }
         });
-    }
-
-    private void sendRequestToDB(FriendRequest friendRequest) {
-        String myBoolean = friendRequest.getAccepted();
-        String seeker = friendRequest.getFriendSeeker();
-        String accepter = friendRequest.getFriendAccepter();
-
-        Firebase putRef = firebaseRequest.child(seeker + "+" + accepter);
-        Map<String, String> map = new HashMap();
-        map.put("seeker", seeker);
-        map.put("accepter", accepter);
-        map.put("boolean", myBoolean);
-        putRef.setValue(map);
     }
 }

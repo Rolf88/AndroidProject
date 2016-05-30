@@ -108,10 +108,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                if (credentials.isEmpty()) {
-                    getUsers();
-                }
                 attemptLogin();
             }
         });
@@ -120,7 +116,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mProgressView = findViewById(R.id.login_progress);
     }
 
-    private void getUsers() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        credentials.clear();
+        getUsersFromFDB();
+    }
+
+    private void getUsersFromFDB() {
         firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -360,14 +364,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
 
             for (User credential : credentials) {
                 String mail = credential.getEmail();

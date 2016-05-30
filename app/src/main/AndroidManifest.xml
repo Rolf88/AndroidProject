@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -35,8 +36,7 @@
             android:name=".Registration"
             android:label="@string/title_activity_registration"
             android:parentActivityName=".LoginActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".AddFriends"
             android:label="@string/title_activity_find_friends"
@@ -61,6 +61,15 @@
         <activity
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="cphbusiness.dk.androidproject.MainActivity" />
+        </activity>
+        <activity
+            android:name=".MyFriends"
+            android:label="@string/title_activity_my_friends"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="cphbusiness.dk.androidproject.MainActivity" />
