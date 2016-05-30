@@ -1,6 +1,9 @@
 package cphbusiness.dk.androidproject;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,6 +11,8 @@ import android.database.Cursor;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v4.app.ActivityCompat;
@@ -53,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<String> requestStringList;
     private Vibrator vibrator;
     private ArrayAdapter adapter;
+    private boolean isDone;
+    private FetcherTask myFetcher;
+    private View mainAct;
+    private View mainProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,8 +88,9 @@ public class MainActivity extends AppCompatActivity {
         mySelf = (User) i.getSerializableExtra("mySelf");
         stringList = i.getStringArrayListExtra("userNames");
         adapter = new ArrayAdapter<User>(this, android.R.layout.simple_list_item_1, tempfriendList);
-
-        getUsersFromFDB();
+        myFetcher = new FetcherTask();
+        mainAct = findViewById(R.id.listView);
+        mainProgress = findViewById(R.id.main_progress);
 
         // Get Current Location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -96,8 +106,6 @@ public class MainActivity extends AppCompatActivity {
 
         sendToFireDB();
 
-        getRequestsFromFDB();
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -112,9 +120,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    private void fetchFromDB(){
         tempfriendList.clear();
         Cursor CR = db.getInformations(db);
         if (CR.moveToFirst()) {
@@ -142,7 +148,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        showProgress(true);
+        myFetcher.execute((Void)null);
         listView.setAdapter(adapter);
         listView.setTextFilterEnabled(true);
     }
@@ -262,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                     friendRequest.setAccepted(tempBoolean);
                     requestList.add(friendRequest);
                 }
+                isDone = true;
                 friendsOrNot();
             }
 
@@ -271,5 +284,74 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
+    }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int animeTime = getResources().getInteger(android.R.integer.config_longAnimTime);
+
+            mainAct.setVisibility(show ? View.GONE : View.VISIBLE);
+            mainAct.animate().setDuration(animeTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mainAct.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mainProgress.setVisibility(show ? View.VISIBLE : View.GONE);
+            mainProgress.animate().setDuration(animeTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mainProgress.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mainProgress.setVisibility(show ? View.VISIBLE : View.GONE);
+            mainAct.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    public class FetcherTask extends AsyncTask<Void, Void, Boolean> {
+
+
+        public FetcherTask() {
+        }
+
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            getRequestsFromFDB();
+            getUsersFromFDB();
+            fetchFromDB();
+            if(isDone){
+                return true;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            myFetcher = null;
+            isDone = false;
+            showProgress(false);
+        }
+
+        @Override
+        protected void onCancelled() {
+            myFetcher = null;
+            isDone = false;
+            showProgress(false);
+        }
     }
 }
