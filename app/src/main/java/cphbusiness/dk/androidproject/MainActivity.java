@@ -43,23 +43,16 @@ public class MainActivity extends AppCompatActivity {
     private Firebase firebaseRequest;
     private static final String FRIENDREQ_URL = "https://friend-request-5555.firebaseio.com";
     private ListView listView;
-    private List<FriendRequest> requestList;
+    private Map<String, FriendRequest> accepterMap;
+    private Map<String, FriendRequest> seekerMap;
     private List<User> tempfriendList;
-    private Map<String, User> friendMap;
-    private LocationManager locationManager;
-    private Criteria criteria;
-    private double myLatitude;
-    private double myLongitude;
-    private Intent i;
+    private Map<String, User> userMap;
     private DatabaseOperation db;
-    private Context ctx;
     public User mySelf;
     public ArrayList<String> stringList;
     public ArrayList<String> requestStringList;
     private Vibrator vibrator;
     private ArrayAdapter adapter;
-    private boolean isDone;
-    private FetcherTask myFetcher;
     private View mainAct;
     private View mainProgress;
 
@@ -70,17 +63,18 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        friendMap = new HashMap<>();
+        userMap = new HashMap<>();
         listView = (ListView) findViewById(R.id.listView);
-        requestList = new ArrayList();
+        accepterMap = new HashMap();
+        seekerMap = new HashMap();
         tempfriendList = new ArrayList();
         requestStringList = new ArrayList();
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        criteria = new Criteria();
-        ctx = this;
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        Context ctx = this;
         db = new DatabaseOperation(ctx);
         String provider = locationManager.getBestProvider(criteria, true);
-        i = getIntent();
+        Intent i = getIntent();
         Firebase.setAndroidContext(this);
         firebaseRef = new Firebase(FIREBASE_URL);
         firebaseRequest = new Firebase(FRIENDREQ_URL);
@@ -88,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
         mySelf = (User) i.getSerializableExtra("mySelf");
         stringList = i.getStringArrayListExtra("userNames");
         adapter = new ArrayAdapter<User>(this, android.R.layout.simple_list_item_1, tempfriendList);
-        myFetcher = new FetcherTask();
         mainAct = findViewById(R.id.listView);
         mainProgress = findViewById(R.id.main_progress);
 
@@ -98,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         Location myLocation = locationManager.getLastKnownLocation(provider);
-        myLatitude = myLocation.getLatitude();
-        myLongitude = myLocation.getLongitude();
+        double myLatitude = myLocation.getLatitude();
+        double myLongitude = myLocation.getLongitude();
 
         mySelf.setLatitude(myLatitude);
         mySelf.setLongitude(myLongitude);
@@ -120,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void fetchFromDB(){
+    private void fetchFromDB() {
         tempfriendList.clear();
         Cursor CR = db.getInformations(db);
         if (CR.moveToFirst()) {
@@ -130,23 +123,11 @@ public class MainActivity extends AppCompatActivity {
                 tempUser.setEmail(CR.getString(2));
                 tempUser.setLatitude(CR.getDouble(3));
                 tempUser.setLongitude(CR.getDouble(4));
-
                 tempfriendList.add(tempUser);
             } while (CR.moveToNext());
 
         } else {
             Toast.makeText(MainActivity.this, "You have no friends find some in Find Friends in the menu", Toast.LENGTH_SHORT).show();
-        }
-
-        List<FriendRequest> tempRequestList = requestList;
-        ArrayList<String> tempRequestStringList = requestStringList;
-
-        for (User user : tempfriendList) {
-            for (String name : tempRequestStringList) {
-                if (user.getName().equals(name)) {
-                    requestStringList.remove(name);
-                }
-            }
         }
     }
 
@@ -154,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         showProgress(true);
-        myFetcher.execute((Void)null);
+        getUsersFromFDB();
+        myRun.run();
         listView.setAdapter(adapter);
         listView.setTextFilterEnabled(true);
     }
@@ -184,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
             Intent in = new Intent(MainActivity.this, MyFriends.class);
             in.putStringArrayListExtra("requests", requestStringList);
             in.putExtra("mySelf", mySelf);
-            startActivity(in);
+            startActivityForResult(in, 1);
             return true;
         }
 
@@ -208,18 +190,32 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void friendsOrNot() {
-        if (!requestList.isEmpty()) {
-            for (FriendRequest request : requestList) {
-                if (request.getFriendAccepter().equals(mySelf.getName()) && request.getAccepted().equals("false")) {
-                    requestStringList.add(request.getFriendSeeker());
+        if (!accepterMap.isEmpty() || !seekerMap.isEmpty()) {
+
+            if (accepterMap.containsKey(mySelf.getName())) {
+                FriendRequest tempRequest = accepterMap.get(mySelf.getName());
+                if (tempRequest.getAccepted().equals("false")) {
+                    requestStringList.add(tempRequest.getFriendSeeker());
                     vibrator.vibrate(200);
-                    Toast.makeText(MainActivity.this, request.getFriendSeeker() + ", wants to be Friends, Go to myFriend menu!", Toast.LENGTH_SHORT).show();
-                } else if (request.getFriendSeeker().equals(mySelf.getName()) && request.getAccepted().equals("true")) {
-                    deleteRequest(request);
-                    db.putInformation(db, friendMap.get(request.getFriendAccepter()));
-                    //does it work?
-                    adapter.notifyDataSetChanged();
+                    Toast.makeText(MainActivity.this, tempRequest.getFriendSeeker() + ", wants to be Friends, Go to myFriend menu!", Toast.LENGTH_SHORT).show();
                 }
+            } else if (seekerMap.containsKey(mySelf.getName())) {
+                FriendRequest tempRequest = seekerMap.get(mySelf.getName());
+                if (tempRequest.getAccepted().equals("true")) {
+                    deleteRequest(tempRequest);
+                    db.putInformation(db, userMap.get(tempRequest.getFriendAccepter()));
+                }
+            }
+        }
+
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                String requestName = data.getStringExtra("requestName");
+                requestStringList.remove(requestName);
             }
         }
     }
@@ -242,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
                     double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
 
                     User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
-                    friendMap.put(tempName, tempUser);
+                    userMap.put(tempName, tempUser);
                 }
 
             }
@@ -254,7 +250,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getRequestsFromFDB() {
-        requestList.clear();
+        accepterMap.clear();
+        seekerMap.clear();
         requestStringList.clear();
         firebaseRequest.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -272,15 +269,17 @@ public class MainActivity extends AppCompatActivity {
                     friendRequest.setFriendSeeker(tempSeeker);
                     friendRequest.setFriendAccepter(tempAccepter);
                     friendRequest.setAccepted(tempBoolean);
-                    requestList.add(friendRequest);
+                    seekerMap.put(friendRequest.getFriendSeeker(), friendRequest);
+                    accepterMap.put(friendRequest.getFriendAccepter(), friendRequest);
                 }
-                isDone = true;
                 friendsOrNot();
+                fetchFromDB();
+                adapter.notifyDataSetChanged();
+                showProgress(false);
             }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
-                Toast.makeText(MainActivity.this, firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
 
         });
@@ -322,36 +321,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public class FetcherTask extends AsyncTask<Void, Void, Boolean> {
-
-
-        public FetcherTask() {
-        }
-
-
+    Runnable myRun = new Runnable() {
         @Override
-        protected Boolean doInBackground(Void... params) {
+        public void run() {
             getRequestsFromFDB();
-            getUsersFromFDB();
-            fetchFromDB();
-            if(isDone){
-                return true;
-            }
-            return null;
         }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            myFetcher = null;
-            isDone = false;
-            showProgress(false);
-        }
-
-        @Override
-        protected void onCancelled() {
-            myFetcher = null;
-            isDone = false;
-            showProgress(false);
-        }
-    }
+    };
 }

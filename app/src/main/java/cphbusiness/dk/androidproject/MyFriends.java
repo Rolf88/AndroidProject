@@ -46,16 +46,17 @@ public class MyFriends extends AppCompatActivity {
         Firebase.setAndroidContext(this);
         firebaseRef = new Firebase(FIREBASE_URL);
         firebaseRequest = new Firebase(FRIENDREQ_URL);
+        friendList = new ArrayList();
+
+        getUsers();
+
         i = getIntent();
         requestStringList = i.getStringArrayListExtra("requests");
         mySelf = (User) i.getSerializableExtra("mySelf");
         listView = (ListView) findViewById(R.id.listViewMyF);
-        friendList = new ArrayList();
         ctx = this;
         db = new DatabaseOperation(ctx);
         adapter = new ArrayAdapter<String>(MyFriends.this, android.R.layout.simple_list_item_1, requestStringList);
-
-        getUsers();
 
 
         listView.setAdapter(adapter);
@@ -72,6 +73,9 @@ public class MyFriends extends AppCompatActivity {
                         request.setFriendSeeker(user.getName());
                         db.putInformation(db, user);
                         sendRequestToDB(request);
+                        Intent i = new Intent();
+                        i.putExtra("requestName", user.getName());
+                        setResult(RESULT_OK, i);
                         finish();
                     }
                 }
@@ -84,7 +88,7 @@ public class MyFriends extends AppCompatActivity {
         String seeker = friendRequest.getFriendSeeker();
         String accepter = friendRequest.getFriendAccepter();
 
-        Firebase putRef = firebaseRequest.child(seeker+"+"+accepter);
+        Firebase putRef = firebaseRequest.child(seeker + "+" + accepter);
         Map<String, String> map = new HashMap();
         map.put("seeker", seeker);
         map.put("accepter", accepter);
