@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SEND_SMS"/>
 
     <application
         android:allowBackup="true"
@@ -33,12 +34,12 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".Registration"
+            android:name=".RegistrationActivity"
             android:label="@string/title_activity_registration"
             android:parentActivityName=".LoginActivity"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".AddFriends"
+            android:name=".AddFriendsActivity"
             android:label="@string/title_activity_find_friends"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
@@ -66,7 +67,7 @@
                 android:value="cphbusiness.dk.androidproject.MainActivity" />
         </activity>
         <activity
-            android:name=".MyFriends"
+            android:name=".MyRequestsActivity"
             android:label="@string/title_activity_my_friends"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">

@@ -11,7 +11,6 @@ import android.database.Cursor;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -121,8 +120,9 @@ public class MainActivity extends AppCompatActivity {
                 User tempUser = new User();
                 tempUser.setName(CR.getString(1));
                 tempUser.setEmail(CR.getString(2));
-                tempUser.setLatitude(CR.getDouble(3));
-                tempUser.setLongitude(CR.getDouble(4));
+                tempUser.setPhoneNo(CR.getString(3));
+                tempUser.setLatitude(CR.getDouble(4));
+                tempUser.setLongitude(CR.getDouble(5));
                 tempfriendList.add(tempUser);
             } while (CR.moveToNext());
 
@@ -157,13 +157,13 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.find_friends) {
-            Intent in = new Intent(MainActivity.this, AddFriends.class);
+            Intent in = new Intent(MainActivity.this, AddFriendsActivity.class);
             in.putStringArrayListExtra("userNames", stringList);
             in.putExtra("mySelf", mySelf);
             startActivity(in);
             return true;
         } else if (id == R.id.my_friends) {
-            Intent in = new Intent(MainActivity.this, MyFriends.class);
+            Intent in = new Intent(MainActivity.this, MyRequestsActivity.class);
             in.putStringArrayListExtra("requests", requestStringList);
             in.putExtra("mySelf", mySelf);
             startActivityForResult(in, 1);
@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
         map.put("name", mySelf.getName());
         map.put("email", mySelf.getEmail());
         map.put("password", mySelf.getPassword());
+        map.put("phoneno", mySelf.getPhoneNo());
         map.put("latitude", new Double(mySelf.getLatitude()).toString());
         map.put("longitude", new Double(mySelf.getLongitude()).toString());
         putRef.setValue(map);
@@ -228,16 +229,18 @@ public class MainActivity extends AppCompatActivity {
                     String namePath = postSnapshot.getKey() + "/name";
                     String emailPath = postSnapshot.getKey() + "/email";
                     String passwordPath = postSnapshot.getKey() + "/password";
+                    String phonenoPath = postSnapshot.getKey() + "/phoneno";
                     String latitudePath = postSnapshot.getKey() + "/latitude";
                     String longitudePath = postSnapshot.getKey() + "/longitude";
 
                     String tempName = dataSnapshot.child(namePath).getValue().toString();
                     String tempEmail = dataSnapshot.child(emailPath).getValue().toString();
                     String tempPassword = dataSnapshot.child(passwordPath).getValue().toString();
+                    String tempPhoneno = dataSnapshot.child(phonenoPath).getValue().toString();
                     double tempLatitude = Double.parseDouble(dataSnapshot.child(latitudePath).getValue().toString());
                     double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
 
-                    User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
+                    User tempUser = new User(tempName, tempEmail, tempPassword, tempPhoneno, tempLatitude, tempLongitude);
                     userMap.put(tempName, tempUser);
                 }
 

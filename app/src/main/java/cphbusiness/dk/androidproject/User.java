@@ -12,6 +12,7 @@ public class User implements Serializable {
     private String name;
     private String email;
     private String password;
+    private String phoneNo;
     private double latitude;
     private double longitude;
 
@@ -19,10 +20,11 @@ public class User implements Serializable {
 
     }
 
-    public User(String name, String email, String password, double latitude, double longitude) {
+    public User(String name, String email, String password, String phoneNo, double latitude, double longitude) {
         this.name = name;
         this.email = email;
         this.password = password;
+        this.phoneNo = phoneNo;
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -45,6 +47,14 @@ public class User implements Serializable {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
     }
 
     public double getLatitude() {

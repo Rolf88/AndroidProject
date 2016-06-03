@@ -8,10 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -23,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AddFriends extends AppCompatActivity {
+public class AddFriendsActivity extends AppCompatActivity {
 
     private Firebase firebaseRef;
     private static final String FIREBASE_URL = "https://torrid-inferno-4868.firebaseio.com";
@@ -37,6 +34,7 @@ public class AddFriends extends AppCompatActivity {
     private User mySelf1;
     private ArrayList<String> stringList;
     private ArrayAdapter adapter;
+    private SMSService smsService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +47,7 @@ public class AddFriends extends AppCompatActivity {
         firebaseRef = new Firebase(FIREBASE_URL);
         firebaseRequest = new Firebase(FRIENDREQ_URL);
 
+        smsService = new SMSService(this);
         ctx = this;
         db = new DatabaseOperation(ctx);
         listView = (ListView) findViewById(R.id.listViewFf);
@@ -59,7 +58,7 @@ public class AddFriends extends AppCompatActivity {
 
         getUsers();
 
-        adapter = new ArrayAdapter<String>(AddFriends.this, android.R.layout.simple_list_item_1, stringList);
+        adapter = new ArrayAdapter<String>(AddFriendsActivity.this, android.R.layout.simple_list_item_1, stringList);
         listView.setAdapter(adapter);
         listView.setTextFilterEnabled(true);
 
@@ -84,6 +83,7 @@ public class AddFriends extends AppCompatActivity {
                     friendRequest.setFriendAccepter(tempUser.getName());
                     friendRequest.setAccepted("false");
                     sendRequestToDB(friendRequest);
+                    smsService.sendSMS(mySelf1,tempUser);
                 }
 
                 finish();
@@ -99,16 +99,18 @@ public class AddFriends extends AppCompatActivity {
                     String namePath = postSnapshot.getKey() + "/name";
                     String emailPath = postSnapshot.getKey() + "/email";
                     String passwordPath = postSnapshot.getKey() + "/password";
+                    String phonenoPath = postSnapshot.getKey() + "/phoneno";
                     String latitudePath = postSnapshot.getKey() + "/latitude";
                     String longitudePath = postSnapshot.getKey() + "/longitude";
 
                     String tempName = dataSnapshot.child(namePath).getValue().toString();
                     String tempEmail = dataSnapshot.child(emailPath).getValue().toString();
                     String tempPassword = dataSnapshot.child(passwordPath).getValue().toString();
+                    String tempPhoneno = dataSnapshot.child(phonenoPath).getValue().toString();
                     double tempLatitude = Double.parseDouble(dataSnapshot.child(latitudePath).getValue().toString());
                     double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
 
-                    User tempUser = new User(tempName, tempEmail, tempPassword, tempLatitude, tempLongitude);
+                    User tempUser = new User(tempName, tempEmail, tempPassword, tempPhoneno,tempLatitude, tempLongitude);
                     friendList.add(tempUser);
                 }
 
