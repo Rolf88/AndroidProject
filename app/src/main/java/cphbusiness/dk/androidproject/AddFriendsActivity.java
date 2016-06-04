@@ -55,6 +55,7 @@ public class AddFriendsActivity extends AppCompatActivity {
         i = getIntent();
         mySelf1 = (User) i.getSerializableExtra("mySelf");
         stringList = i.getStringArrayListExtra("userNames");
+        stringList.remove(mySelf1.getName());
 
         getUsers();
 
@@ -111,7 +112,9 @@ public class AddFriendsActivity extends AppCompatActivity {
                     double tempLongitude = Double.parseDouble(dataSnapshot.child(longitudePath).getValue().toString());
 
                     User tempUser = new User(tempName, tempEmail, tempPassword, tempPhoneno,tempLatitude, tempLongitude);
-                    friendList.add(tempUser);
+                    if(!tempUser.getName().equals(mySelf1.getName())){
+                        friendList.add(tempUser);
+                    }
                 }
 
             }

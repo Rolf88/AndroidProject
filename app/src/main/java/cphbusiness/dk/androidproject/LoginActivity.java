@@ -33,20 +33,12 @@ import java.util.List;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    /**
-     * Id to identity READ_CONTACTS permission request.
-     */
-    private static final int REQUEST_READ_CONTACTS = 0;
     private Button btnReg;
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
     private static List<User> credentials = new ArrayList();
     private Firebase firebaseRef;
     private static final String FIREBASE_URL = "https://torrid-inferno-4868.firebaseio.com";
     public User mySelf;
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -193,12 +185,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
         return email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
         return password.length() > 1;
     }
 
@@ -268,7 +258,6 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
 
-            // TODO: register the new account here.
             return false;
         }
 

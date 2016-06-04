@@ -5,11 +5,11 @@
     <item
         android:id="@+id/find_friends"
         android:orderInCategory="100"
-        android:title="Find friends"
+        android:title="@string/title_activity_find_friends"
         app:showAsAction="never"/>
     <item
         android:id="@+id/my_friends"
         android:orderInCategory="100"
-        android:title="My Requests"
+        android:title="@string/title_activity_my_friends"
         app:showAsAction="never"/>
 </menu>

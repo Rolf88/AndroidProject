@@ -90,11 +90,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         Location myLocation = locationManager.getLastKnownLocation(provider);
-        double myLatitude = myLocation.getLatitude();
-        double myLongitude = myLocation.getLongitude();
 
-        mySelf.setLatitude(myLatitude);
-        mySelf.setLongitude(myLongitude);
+        if(myLocation != null){
+            double myLatitude = myLocation.getLatitude();
+            double myLongitude = myLocation.getLongitude();
+            mySelf.setLatitude(myLatitude);
+            mySelf.setLongitude(myLongitude);
+        }else{
+            Toast.makeText(this,"You have to set location permission on!", Toast.LENGTH_SHORT).show();
+        }
 
         sendToFireDB();
 
@@ -198,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
                 if (tempRequest.getAccepted().equals("false")) {
                     requestStringList.add(tempRequest.getFriendSeeker());
                     vibrator.vibrate(200);
-                    Toast.makeText(MainActivity.this, tempRequest.getFriendSeeker() + ", wants to be Friends, Go to myFriend menu!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, tempRequest.getFriendSeeker() + ", wants to be Friends, Go to My Requests menu!", Toast.LENGTH_SHORT).show();
                 }
             } else if (seekerMap.containsKey(mySelf.getName())) {
                 FriendRequest tempRequest = seekerMap.get(mySelf.getName());
